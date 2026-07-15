@@ -1,4 +1,4 @@
-# Cyclotomic Integer Approximation
+# Complex Sensing via LLL
 
 This repository contains the code accompanying:
 
@@ -53,7 +53,7 @@ The main entry point is `run_trials` in `lll.py`:
 from lll import run_trials
 
 results = run_trials(
-    orders=[5, 7, 11, 13, 17],   # root-of-unity orders p to test
+    orders=[5, 7, 11, 13, 17],    # root-of-unity orders p to test
     gen="l1",                     # coefficient distribution: "l1", "l1pos", or "normal"
     gen_param=2**20,              # distribution parameter (l1 radius or std. dev.)
     Ascale=10**16,                # lattice scaling factor for the objective value
@@ -80,11 +80,11 @@ See `examples.ipynb` for full worked examples, and `testing.xlsx` for the parame
 ## Citation
 
 ```bibtex
-@article{pan2025complex,
+@article{pan2026complex,
   title   = {Complex Sensing: Reconstructing Dense Rational Signals from Few Complex Measurements},
   author  = {Pan, William H. and Roscow, Dylan and Raviv, Netanel},
   journal = {IEEE Signal Processing Letters},
-  year    = {2025},
+  year    = {2026},
   note    = {In press}
 }
 ```
