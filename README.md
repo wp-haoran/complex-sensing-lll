@@ -1,39 +1,94 @@
 # Cyclotomic Integer Approximation
 
-This repository contains testing code used for the work
+This repository contains the code accompanying:
 
->
-> William H. Pan, Dylan Roscow, and Netanel Raviv. Complex sensing: Reconstructing dense rational signals from few complex measurements. IEEE Signal Processing Letters (in-press).
+> William H. Pan, Dylan Roscow, and Netanel Raviv. **"Complex Sensing: Reconstructing Dense Rational Signals from Few Complex Measurements."** *IEEE Signal Processing Letters* (in press).
 
-In the project we encountered the following subproblem.
-Take $n^\text{th}$ roots of unity $\zeta_n^k = (e^{(2\pi / n) i})^k$. 
-Given a "cyclotomic integer" $z$, that is, a sum of $n^\text{th}$ roots of unity
+## Overview
 
-$z = c_0\zeta_n^0 + c_1\zeta_n^1 + \cdots + c_{n - 1}\zeta_n^{n - 1}$
+Our proposed complex sensing method reconstructs a dense (not necessarily sparse) rational signal from a small number of complex-valued linear measurements, using sensing matrices built from roots of unity. Recovering the signal from these measurements reduces to a **cyclotomic integer decoding** problem:
 
-where $c_0, c_1, \ldots, c_{n - 1}$ are unknown integers, can we find or at least approximate the $c_0, c_1, \ldots, c_{n - 1}$? 
-To our knowledge there exists no analytical method.
-In this code we implement the LLL algorithm \[Lenstra, Lenstra, Lovász (1982)\] to recover $c_0, c_1, \ldots, c_{n - 1}$ and test its success rate against various random distirbutions over the cyclotomic integers.
-We also include an implementation and attempt to generalize an approximation algorithm for complex numbers by cyclotomic integers \[Shokrollahi & Stemann (1996)\] arising from $n$ that are powers of 2.
+Given an $n^\text{th}$ root of unity $\zeta_n = e^{2\pi i / n}$ and a complex number
 
-For questions reach out to whpan \[at\] utexas \[dot\] edu or droscow \[at\] purdue \[dot\] edu.
+$$z = c_0 \zeta_n^0 + c_1 \zeta_n^1 + \cdots + c_{n-1} \zeta_n^{n-1},$$
 
-## Instructions
+recover the unknown integer coefficients $c_0, \dots, c_{n-1}$ from $z$ alone.
 
-The code uses NumPy, [gmpy2](https://gmpy2.readthedocs.io/en/latest/), [fpylll](https://github.com/fplll/fpylll), and [SageMath](https://doc.sagemath.org/html/en/installation/).
+This is a shortest-vector-type problem with no known closed-form solution. This repository reduces cyclotomic integer decoding to finding a short vector in an explicitly constructed lattice, and solves it with the LLL algorithm [Lenstra, Lenstra, Lovász 1982]. We measure recovery success rate and runtime across root-of-unity order $p$, coefficient magnitude, numerical precision, and additive noise.
 
-`lll.py` contains all helper functions used in testing. 
-We plot testing data in `examples.ipynb`, which any user should feel free to experiment with.
-The main function to be used is `run_trials` which takes as parameters
-- `orders`: the list of `n`'s to test against.
-- `gen` and `gen_param`: selection of the random generator and its parameter.
-- `Ascale` and `Bscale`: hyperparameters for our LLL matrix. In the noiseless case, highest success rates are achieved when `Ascale` is to the highest allowed by `prec` and `Bscale` is set around 3. For the noisy case set `Bscale` to 0 to use our formula to approximate the optimal `Bscale` value.
-- `last_root`: boolean setting whether to include $\zeta_n^{n - 1}$.
-- `num_trials`: number of trials.
-- `noise`: variance of random Gaussian noise to be added to the generated random cyclotomic integer before processing.
-- `seed`: set random generator seed.
-- `prec`: number of bits to use to define numbers. Implemented with `gmpy2.mpfr`.
+## Repository Contents
 
-For more guidance on best values to use see the testing data in `testing.xlsx`. 
+| File | Description |
+|---|---|
+| `lll.py` | Core library: random cyclotomic integer generators, LLL-based recovery (`recover_sparse_cyclotomic`), and batch trial runners (`run_trials`, `run_trials_timed`). |
+| `examples.ipynb` | Reproduces the paper's experimental figures (success rate vs. precision/coefficient magnitude/noise) and illustrates runtime scaling using `lll.py`. |
+| `testing.xlsx` | Raw trial data referenced by the plotting cells in `examples.ipynb`. |
 
-`approximation.ipynb` includes functions to implement the aforementioned direct approximation algorithm and example usage.
+## Installation
+
+`fpylll` (the LLL implementation used here) is a standalone Python wrapper around the `fplll` C++ library. SageMath bundles it as part of its own environment. Otherwise, two install paths:
+
+**Conda (recommended):**
+```bash
+conda install -c conda-forge fpylll
+pip install -r requirements.txt
+```
+This pulls prebuilt binaries for `fplll`, `GMP`, and `MPFR`, so no local compilation is needed.
+
+**Pip only:**
+```bash
+pip install -r requirements.txt
+```
+This will attempt to build `fpylll`'s C extension against your system's `fplll`/`GMP`/`MPFR` libraries, so install those first, e.g. on Debian/Ubuntu:
+```bash
+sudo apt install libfplll-dev libgmp-dev libmpfr-dev
+```
+(or the Homebrew equivalents on macOS). If you hit build errors, the conda route above is more reliable.
+
+## Usage
+
+The main entry point is `run_trials` in `lll.py`:
+
+```python
+from lll import run_trials
+
+results = run_trials(
+    orders=[5, 7, 11, 13, 17],   # root-of-unity orders p to test
+    gen="l1",                     # coefficient distribution: "l1", "l1pos", or "normal"
+    gen_param=2**20,              # distribution parameter (l1 radius or std. dev.)
+    Ascale=10**16,                # lattice scaling factor for the objective value
+    Bscale=5,                     # lattice scaling factor for the coefficient block
+    last_root=False,              # include the p-1'th root of unity in the sum
+    num_trials=1000,
+    prec=53,                      # 53 = IEEE-754 double; larger = arbitrary precision via gmpy2
+)
+```
+
+Key parameters:
+- `Ascale` / `Bscale`: hyperparameters of the constructed lattice basis. In the noiseless case, best results come from setting `Ascale` as large as `prec` allows and `Bscale` around 3–5. In the noisy case, set `Bscale=0` to use the closed-form estimate derived in the paper.
+- `prec`: number of mantissa bits. `prec=53` uses `numpy.float64` for speed; any other value switches to arbitrary-precision arithmetic via `gmpy2.mpfr`.
+
+See `examples.ipynb` for full worked examples, and `testing.xlsx` for the parameter sweeps behind each figure in the paper.
+
+## Dependencies
+
+- [NumPy](https://numpy.org/)
+- [gmpy2](https://gmpy2.readthedocs.io/en/latest/) — arbitrary-precision arithmetic
+- [fpylll](https://github.com/fplll/fpylll) — LLL lattice reduction
+- matplotlib
+
+## Citation
+
+```bibtex
+@article{pan2025complex,
+  title   = {Complex Sensing: Reconstructing Dense Rational Signals from Few Complex Measurements},
+  author  = {Pan, William H. and Roscow, Dylan and Raviv, Netanel},
+  journal = {IEEE Signal Processing Letters},
+  year    = {2025},
+  note    = {In press}
+}
+```
+
+## Contact
+
+For questions regarding the code, reach out to whpan [at] utexas [dot] edu or droscow [at] purdue [dot] edu.

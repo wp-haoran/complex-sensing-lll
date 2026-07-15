@@ -1,3 +1,23 @@
+"""
+lll.py
+======
+
+LLL-based recovery of cyclotomic integers from few complex measurements.
+
+Given a cyclotomic integer z = c_0 * zeta_p^0 + c_1 * zeta_p^1 + ... + c_{p-1} * zeta_p^{p-1},
+where zeta_p is a primitive p-th root of unity and c_0, ..., c_{p-1} are unknown integers,
+this module reconstructs the coefficients c_i by reducing the problem to finding a short
+vector in an explicitly constructed lattice, solved via the LLL algorithm
+(Lenstra, Lenstra, Lovasz 1982) as implemented in `fpylll`.
+
+This code accompanies:
+    W. H. Pan, D. Roscow, N. Raviv. "Complex Sensing: Reconstructing Dense Rational
+    Signals from Few Complex Measurements." IEEE Signal Processing Letters (in press).
+
+See README.md for usage and `examples.ipynb` for worked examples reproducing the
+paper's experimental results.
+"""
+
 # Imports for numerical computations
 import math
 import numpy as np
@@ -76,7 +96,9 @@ def coefficients_gen_l1(
     - `coefs`: coefficients of roots of unity in sum, where `coefs[i]` corresponds to the `i`th root.
     """
 
-    # TODO: do we want to work with integers bigger than 2 ** 64?
+    # NOTE: coefficients are generated as Python ints (arbitrary precision),
+    # so magnitudes beyond 2**64 are supported natively; only downstream use
+    # of fixed-width types (e.g. numpy int64 arrays) would impose a ceiling.
 
     # Uniformly select which coefficients are negative
     negatives = rng.integers(0, 1, size=p, endpoint=True)
