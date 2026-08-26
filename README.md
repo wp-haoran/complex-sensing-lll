@@ -2,7 +2,7 @@
 
 This repository contains the code accompanying:
 
-> William H. Pan, Dylan Roscow, and Netanel Raviv. **"Complex Sensing: Reconstructing Dense Rational Signals from Few Complex Measurements."** *IEEE Signal Processing Letters* (in press).
+> William H. Pan, Dylan Roscow, and Netanel Raviv. **"Complex Sensing: Reconstructing Dense Rational Signals from Few Complex Measurements."** *IEEE Signal Processing Letters*, vol. 33, pp. 3098–3101, 2026, doi: 10.1109/lsp.2026.3714224.
 
 ## Overview
 
@@ -81,11 +81,14 @@ See `examples.ipynb` for full worked examples, and `testing.xlsx` for the parame
 
 ```bibtex
 @article{pan2026complex,
-  title   = {Complex Sensing: Reconstructing Dense Rational Signals from Few Complex Measurements},
+  title   = {Complex Sensing: Reconstructing Dense Rational Signals From Few Complex Measurements}, 
   author  = {Pan, William H. and Roscow, Dylan and Raviv, Netanel},
-  journal = {IEEE Signal Processing Letters},
+  journal = {IEEE Signal Processing Letters},   
   year    = {2026},
-  note    = {In press}
+  volume  = {33},
+  number  = {},
+  pages   = {3098-3101},
+  doi     = {10.1109/LSP.2026.3714224}
 }
 ```
 
